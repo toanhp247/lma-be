@@ -7,4 +7,22 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-// Bước 1: placeholder (Bước 2 mới tạo User model)
+enum UserType {
+  student
+  teacher
+}
+
+model User {
+  id           String   @id @default(cuid())
+  username     String   @unique
+  email        String   @unique
+  phone        String
+  userType     UserType
+  code         String
+
+  passwordHash String
+  fullName     String   @default("")
+
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}

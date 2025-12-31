@@ -1,21 +1,19 @@
 import type { Request, Response } from "express";
+import { authService } from "./auth.service";
 
 export const authController = {
-  login: (_req: Request, res: Response) => {
-    res.status(200).json({
-      accessToken: "stub-token",
-      user: { id: "stub", username: "stub", fullName: "Stub User", userType: "student" },
-    });
+  async login(req: Request, res: Response) {
+    const result = await authService.login(req.body);
+    return res.status(200).json(result);
   },
 
-  register: (_req: Request, res: Response) => {
-    res.status(201).json({
-      accessToken: "stub-token",
-      user: { id: "stub", username: "stub", fullName: "Stub User", userType: "student" },
-    });
+  async register(req: Request, res: Response) {
+    const result = await authService.register(req.body);
+    return res.status(201).json(result);
   },
 
-  forgotPassword: (_req: Request, res: Response) => {
-    res.status(200).json({ message: "Vui lòng kiểm tra email để đặt lại mật khẩu" });
+  async forgotPassword(req: Request, res: Response) {
+    const result = await authService.forgotPassword(req.body);
+    return res.status(200).json(result);
   },
 };
