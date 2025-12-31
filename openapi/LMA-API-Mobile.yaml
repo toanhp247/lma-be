@@ -1,0 +1,491 @@
+openapi: 3.0.3
+info:
+  title: Library Management App API (UI-First Proposal)
+  description: >
+    API contract được trích xuất từ giao diện React Native.
+    Hỗ trợ các tính năng: Auth, Library Management, User Profile.
+  version: 1.0.0
+servers:
+  - url: https://api.example.com/v1
+    description: Production Server (TBD - Cần Backend cung cấp)
+  - url: http://localhost:3000/v1
+    description: Local Dev
+
+tags:
+  - name: Auth
+    description: Authentication & account recovery
+  - name: User
+    description: User profile
+  - name: Library
+    description: Library & books
+
+components:
+  securitySchemes:
+    # ASSUMPTION: Sử dụng Bearer Token cho xác thực (Chuẩn phổ biến cho Mobile App)
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    # --- Shared Schemas ---
+    ErrorResponse:
+      type: object
+      description: ASSUMPTION - Cấu trúc lỗi chuẩn (UI hiện tại chỉ hiển thị text)
+      properties:
+        message:
+          type: string
+          example: "Thông tin đăng nhập không chính xác"
+        code:
+          type: string
+          example: "AUTH_001"
+
+    # --- Auth Schemas ---
+    LoginRequest:
+      type: object
+      required: [username, password]
+      properties:
+        username:
+          type: string
+          example: "student123"
+        password:
+          type: string
+          format: password
+          example: "password123"
+
+    RegisterRequest:
+      type: object
+      required: [username, password, email, phone, userType, code]
+      properties:
+        username:
+          type: string
+        password:
+          type: string
+          format: password
+        email:
+          type: string
+          format: email
+          description: "UI Validation: Phải có đuôi @hcmut.edu.vn"
+          example: "user@hcmut.edu.vn"
+        phone:
+          type: string
+          example: "0901234567"
+        userType:
+          type: string
+          enum: [student, teacher]
+          description: "UI: Radio button selection"
+        code:
+          type: string
+          description: "Mã số sinh viên (7 số) hoặc Mã số giảng viên"
+          example: "2012345"
+
+    AuthResponse:
+      type: object
+      properties:
+        accessToken:
+          type: string
+          description: "JWT Token dùng cho các request sau"
+        user:
+          $ref: "#/components/schemas/UserShort"
+
+    # Sẽ định nghĩa chi tiết UserProfile ở phần sau, đây là bản rút gọn cho Auth response
+    UserShort:
+      type: object
+      properties:
+        id:
+          type: string
+        username:
+          type: string
+        fullName:
+          type: string
+        userType:
+          type: string
+          enum: [student, teacher]
+
+    # --- User Schemas ---
+    UserProfile:
+      type: object
+      properties:
+        id:
+          type: string
+          example: "user_123456"
+        username:
+          type: string
+          example: "student2012345"
+        fullName:
+          type: string
+          example: "Nguyen Van A"
+        email:
+          type: string
+          example: "a.nguyen@hcmut.edu.vn"
+        phone:
+          type: string
+          example: "0901234567"
+        userType:
+          type: string
+          enum: [student, teacher]
+        code:
+          type: string
+          description: "MSSV hoặc MSGV"
+          example: "2012345"
+        gender:
+          type: string
+          enum: [male, female]
+          example: "male"
+        dateOfBirth:
+          type: string
+          description: "UI đang hiển thị và gửi dạng dd/mm/yyyy"
+          example: "15/08/2003"
+        avatarUrl:
+          type: string
+          format: uri
+          example: "https://api.example.com/uploads/avatars/user_123.jpg"
+
+    UserUpdateRequest:
+      type: object
+      required: [password] # UI bắt buộc nhập pass mới cho save
+      properties:
+        fullName:
+          type: string
+        phone:
+          type: string
+        dateOfBirth:
+          type: string
+          description: "Format: dd/mm/yyyy"
+          example: "15/08/2003"
+        gender:
+          type: string
+          enum: [male, female]
+        password:
+          type: string
+          description: "BẮT BUỘC: Password hiện tại để xác nhận bảo mật (theo UI logic)"
+        avatar:
+          type: string
+          format: binary
+          description: "File ảnh mới (nếu có thay đổi)"
+
+    # --- Library/Book Schemas ---
+    BookItem:
+      type: object
+      description: "Model rút gọn dùng cho danh sách (BooksScreen)"
+      properties:
+        id:
+          type: string
+          example: "book_001"
+        title:
+          type: string
+          example: "All The Light We Cannot See"
+        author:
+          type: string
+          example: "Anthony Doerr"
+        coverUrl:
+          type: string
+          format: uri
+          example: "https://api.example.com/books/covers/book_001.jpg"
+        status:
+          type: string
+          enum: [available, borrowed]
+          description: "Trạng thái hiển thị màu sắc trên UI (Xanh/Xám)"
+          example: "available"
+        dueDate:
+          type: string
+          nullable: true
+          description: "Hiển thị nếu status = borrowed. Format: dd/mm/yyyy"
+          example: "06/12/2025"
+
+    BookDetail:
+      allOf:
+        - $ref: "#/components/schemas/BookItem"
+        - type: object
+          description: "Model chi tiết dùng cho BookDetailScreen"
+          properties:
+            description:
+              type: string
+              example: "Một cô gái mù người Pháp và một cậu bé người Đức..."
+            publisher:
+              type: string
+              example: "Scribner"
+            publicationYear:
+              type: integer
+              example: 2014
+            pageCount:
+              type: integer
+              example: 531
+            categories:
+              type: array
+              items:
+                type: string
+              example: ["Văn học", "Hư cấu"]
+            tags:
+              type: array
+              items:
+                type: string
+              example: ["Historical", "Fiction"]
+            availableCopies:
+              type: integer
+              description: "Số lượng còn lại (UI: '2' of 5)"
+              example: 2
+            totalCopies:
+              type: integer
+              description: "Tổng số lượng (UI: 2 of '5')"
+              example: 5
+            isUserBorrowed:
+              type: boolean
+              description: "Cờ để UI hiển thị nút 'Mượn' hay 'Đã mượn' (disable)"
+              example: false
+
+    BorrowResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        dueDate:
+          type: string
+          description: "Ngày phải trả sách (để UI cập nhật local state)"
+          example: "06/12/2025"
+        message:
+          type: string
+          example: "Mượn sách thành công"
+
+paths:
+  # --- Auth Module ---
+  /auth/login:
+    post:
+      summary: Đăng nhập người dùng
+      tags: [Auth]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LoginRequest"
+      responses:
+        "200":
+          description: Đăng nhập thành công
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthResponse"
+        "401":
+          description: Sai tài khoản hoặc mật khẩu
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /auth/register:
+    post:
+      summary: Đăng ký tài khoản mới
+      tags: [Auth]
+      description: "UI Logic: Frontend đã validate email @hcmut và format MSSV trước khi gửi"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RegisterRequest"
+      responses:
+        "201":
+          description: Đăng ký thành công
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthResponse"
+        "400":
+          description: Validation error (Email trùng, sai format...)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /auth/forgot-password:
+    post:
+      summary: Yêu cầu đặt lại mật khẩu
+      tags: [Auth]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email]
+              properties:
+                email:
+                  type: string
+                  format: email
+      responses:
+        "200":
+          description: Email hướng dẫn đã được gửi
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Vui lòng kiểm tra email để đặt lại mật khẩu"
+        "400":
+          description: Email không hợp lệ hoặc không tồn tại
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  # --- User Module ---
+  /users/me:
+    get:
+      summary: Lấy thông tin cá nhân (Profile)
+      tags: [User]
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Trả về thông tin chi tiết user
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserProfile"
+        "401":
+          description: Unauthorized
+
+    put:
+      summary: Cập nhật thông tin cá nhân
+      tags: [User]
+      security:
+        - bearerAuth: []
+      description: >
+        Sử dụng Multipart/form-data để hỗ trợ upload Avatar.
+        Backend CẦN verify field 'password' trong body trùng với mật khẩu hiện tại mới cho phép update.
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              $ref: "#/components/schemas/UserUpdateRequest"
+      responses:
+        "200":
+          description: Cập nhật thành công, trả về profile mới
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserProfile"
+        "400":
+          description: Sai password xác nhận hoặc dữ liệu không hợp lệ
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "401":
+          description: Unauthorized
+
+  # --- Books List ---
+  /books:
+    get:
+      summary: Lấy danh sách sách (Pagination + Search + Filter)
+      tags: [Library]
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: query
+          name: page
+          schema:
+            type: integer
+            default: 1
+          description: "UI Logic: currentPage"
+        - in: query
+          name: limit
+          schema:
+            type: integer
+            default: 12
+          description: "UI Logic: pageSize = 12"
+        - in: query
+          name: search
+          schema:
+            type: string
+          description: "Từ khóa tìm kiếm (Title/Author)"
+        - in: query
+          name: tab
+          schema:
+            type: string
+            enum: [all, category, available]
+            default: all
+          description: "Mapping với UI Tabs: 'all' (Tất cả), 'category' (Thể loại - TBD), 'available' (Sẵn có)"
+      responses:
+        "200":
+          description: Danh sách sách
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/BookItem"
+                  pagination:
+                    type: object
+                    properties:
+                      total:
+                        type: integer
+                      page:
+                        type: integer
+                      totalPages:
+                        type: integer
+        "401":
+          description: Unauthorized
+
+  # --- Book Detail ---
+  /books/{id}:
+    get:
+      summary: Lấy chi tiết sách
+      tags: [Library]
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Chi tiết sách
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BookDetail"
+        "404":
+          description: Không tìm thấy sách
+        "401":
+          description: Unauthorized
+
+  # --- Book Actions ---
+  /books/{id}/borrow:
+    post:
+      summary: Mượn sách
+      tags: [Library]
+      security:
+        - bearerAuth: []
+      description: "Trigger khi user bấm 'Xác nhận' trong BottomSheet mượn sách"
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Mượn thành công
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BorrowResponse"
+        "400":
+          description: Sách đã hết hoặc user đang mượn
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "401":
+          description: Unauthorized
