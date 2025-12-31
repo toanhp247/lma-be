@@ -1,8 +1,9 @@
 import bcrypt from "bcrypt";
-import jwt from "jsonwebtoken";
 import { prisma } from "../../config/prisma";
 import { env } from "../../config/env";
 import { AppError } from "../../utils/app-error";
+import jwt, { type SignOptions } from "jsonwebtoken";
+
 
 type UserShort = {
   id: string;
@@ -21,7 +22,11 @@ function toUserShort(u: any): UserShort {
 }
 
 function signAccessToken(userId: string): string {
-  return jwt.sign({ sub: userId }, env.JWT_SECRET, { expiresIn: env.JWT_EXPIRES_IN });
+  const options: SignOptions = {
+    expiresIn: env.JWT_EXPIRES_IN as unknown as SignOptions["expiresIn"],
+  };
+
+  return jwt.sign({ sub: userId }, env.JWT_SECRET, options);
 }
 
 export const authService = {
