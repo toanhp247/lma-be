@@ -30,7 +30,40 @@ model User {
   gender       Gender?
   dateOfBirth  String?
   avatarUrl    String?
+  borrows      Borrow[]
 
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
+}
+
+model Book {
+  id              String   @id @default(cuid())
+  title           String
+  author          String
+  coverUrl        String?
+  description     String?
+  publisher       String?
+  publicationYear Int?
+  pageCount       Int?
+  categories      Json?
+  tags            Json?
+  totalCopies     Int
+  availableCopies Int
+  borrows         Borrow[]
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}
+
+model Borrow {
+  id         String   @id @default(cuid())
+  userId     String
+  bookId     String
+  dueDate    String
+  borrowedAt DateTime @default(now())
+  returnedAt DateTime?
+  user       User     @relation(fields: [userId], references: [id])
+  book       Book     @relation(fields: [bookId], references: [id])
+
+  @@index([userId])
+  @@index([bookId])
 }
