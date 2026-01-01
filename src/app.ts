@@ -6,6 +6,7 @@ import path from "path";
 import { logger } from "./utils/logger";
 import { authRouter } from "./modules/auth/auth.router";
 import { userRouter } from "./modules/user/user.router";
+import { libraryRouter } from "./modules/library/library.router";
 import { notFoundMiddleware } from "./middlewares/not-found.middleware";
 import { errorMiddleware } from "./middlewares/error.middleware";
 
@@ -31,6 +32,7 @@ export function createApp() {
 
   app.use("/v1", authRouter);
   app.use("/v1", userRouter);
+  app.use("/v1", libraryRouter);
 
   app.use(notFoundMiddleware);
   app.use(errorMiddleware);
