@@ -434,6 +434,10 @@ paths:
                         type: integer
         "401":
           description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
 
   # --- Book Detail ---
   /books/{id}:
@@ -457,8 +461,16 @@ paths:
                 $ref: "#/components/schemas/BookDetail"
         "404":
           description: Không tìm thấy sách
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
         "401":
           description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
 
   # --- Book Actions ---
   /books/{id}/borrow:
@@ -489,3 +501,7 @@ paths:
                 $ref: "#/components/schemas/ErrorResponse"
         "401":
           description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
