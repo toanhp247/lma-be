@@ -12,6 +12,11 @@ enum UserType {
   teacher
 }
 
+enum Gender {
+  male
+  female
+}
+
 model User {
   id           String   @id @default(cuid())
   username     String   @unique
@@ -22,6 +27,9 @@ model User {
 
   passwordHash String
   fullName     String   @default("")
+  gender       Gender?
+  dateOfBirth  String?
+  avatarUrl    String?
 
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
